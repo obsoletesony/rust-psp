@@ -13,7 +13,12 @@ edition = "2018"
 build = "build.rs"
 
 [lib]
-crate-type = ["lib", "staticlib"]
+# NOTE(dreamcart fork): "staticlib" removed. rustc must resolve the global
+# allocator when emitting a staticlib artifact, which is impossible under the
+# `external-global-alloc` feature (the consuming BINARY provides the
+# allocator). Nothing in this repo links libpsp.a — cargo-psp builds bin
+# crates against the rlib. Re-add "staticlib" only for stub-only exports.
+crate-type = ["lib"]
 
 [features]
 default = []
@@ -25,6 +30,11 @@ external-c-heap = []
 # Build without panic unwinding support. This keeps no_std PSP apps on
 # panic_abort and avoids building/linking panic_unwind + libunwind.
 abort-only = []
+# Let the consuming binary install its own #[global_allocator] and
+# #[alloc_error_handler] instead of the per-allocation kernel-block
+# SystemAlloc here (which makes one kernel object PER allocation and
+# exhausts the ~4096 kernel-object cap under allocation-heavy crates).
+external-global-alloc = []
 embedded-graphics = [ "dep:embedded-graphics-core" ]
 
 [dependencies]

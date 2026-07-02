@@ -3,6 +3,7 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::{mem, ptr};
 
 /// An allocator that hooks directly into the PSP OS memory allocator.
+#[cfg_attr(feature = "external-global-alloc", allow(dead_code))]
 struct SystemAlloc;
 
 unsafe impl GlobalAlloc for SystemAlloc {
@@ -49,10 +50,11 @@ unsafe impl GlobalAlloc for SystemAlloc {
     }
 }
 
+#[cfg(not(feature = "external-global-alloc"))]
 #[global_allocator]
 static ALLOC: SystemAlloc = SystemAlloc;
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(feature = "external-global-alloc")))]
 #[alloc_error_handler]
 fn aeh(_: Layout) -> ! {
     loop {
